@@ -3,44 +3,43 @@
  * For licensing, see LICENSE.md.
  */
 
-'use strict';
+"use strict";
 
 /* eslint-env node */
 
-const path = require( 'path' );
-const webpack = require( 'webpack' );
-const { bundler } = require( '@ckeditor/ckeditor5-dev-utils' );
-const UglifyJsWebpackPlugin = require( 'uglifyjs-webpack-plugin' );
+const path = require("path");
+const webpack = require("webpack");
+const { bundler, styles } = require("@ckeditor/ckeditor5-dev-utils");
+const UglifyJsWebpackPlugin = require("uglifyjs-webpack-plugin");
 
 module.exports = {
 	context: __dirname,
 
-	devtool: 'source-map',
+	devtool: "source-map",
 	performance: { hints: false },
 	externals: {
 		react: {
-			root: 'React',
-			commonjs2: 'react',
-			commonjs: 'react',
-			amd: 'react'
+			root: "React",
+			commonjs2: "react",
+			commonjs: "react",
+			amd: "react"
 		}
 	},
 
-	entry: path.join( __dirname, 'src', 'ckeditor.jsx' ),
+	entry: path.join(__dirname, "src", "ckeditor.jsx"),
 
 	output: {
-		library: 'CKEditor',
+		library: "CKEditor",
 
-		path: path.join( __dirname, 'dist' ),
-		filename: 'ckeditor.js',
-		libraryTarget: 'umd',
-		libraryExport: 'default',
-
+		path: path.join(__dirname, "dist"),
+		filename: "ckeditor.js",
+		libraryTarget: "umd",
+		libraryExport: "default"
 	},
 
 	optimization: {
 		minimizer: [
-			new UglifyJsWebpackPlugin( {
+			new UglifyJsWebpackPlugin({
 				sourceMap: true,
 				uglifyOptions: {
 					output: {
@@ -48,28 +47,52 @@ module.exports = {
 						comments: /^!/
 					}
 				}
-			} )
+			})
 		]
 	},
 
 	plugins: [
-		new webpack.BannerPlugin( {
+		new webpack.BannerPlugin({
 			banner: bundler.getLicenseBanner(),
 			raw: true
-		} ),
+		})
 	],
 
 	module: {
 		rules: [
 			{
 				test: /\.jsx$/,
-				loader: 'babel-loader',
+				loader: "babel-loader",
 				exclude: /node_modules/,
 				query: {
 					compact: false,
-					presets: [ '@babel/preset-react', '@babel/preset-env' ]
+					presets: ["@babel/preset-react", "@babel/preset-env"]
 				}
+			},
+			{
+				test: /ckeditor5-[^/\\]+[/\\]theme[/\\]icons[/\\][^/\\]+\.svg$/,
+				use: ["raw-loader"]
+			},
+			{
+				test: /ckeditor5-[^/\\]+[/\\]theme[/\\].+\.css/,
+				use: [
+					{
+						loader: "style-loader",
+						options: {
+							singleton: true
+						}
+					},
+					{
+						loader: "postcss-loader",
+						options: styles.getPostCssConfig({
+							themeImporter: {
+								themePath: require.resolve("@ckeditor/ckeditor5-theme-lark")
+							},
+							minify: true
+						})
+					}
+				]
 			}
 		]
-	},
+	}
 };
